@@ -1,0 +1,20 @@
+name: ページを作り直す
+
+# Claude などのアプリからの push では GitHub Pages が作り直されないため、
+# push のたびに作り直しを頼む。
+on:
+  push:
+    branches: [gh-pages]
+  workflow_dispatch:
+
+permissions:
+  pages: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pages の作り直しを頼む
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds"
