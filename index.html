@@ -41,6 +41,15 @@
     .result-links{margin:10px 0 0;padding:10px 11px;border:1px solid #405782;border-radius:6px;background:#0d1730;font-size:12px;line-height:1.6}
     .result-links b{display:block;margin-bottom:3px;font-size:13px}
     .result-links a{display:inline-block;margin-right:12px;min-height:28px}
+    .results-box{margin:14px 0 0;padding:12px 13px;border:2px solid var(--accent);border-radius:8px;background:#0b2a40}
+    .results-box h2{margin:0 0 8px;font-size:17px}
+    .res{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-top:1px solid #1f4a66}
+    .res:first-of-type{border-top:0}
+    .res b{font-size:16px}
+    .res small{grid-column:1/-1;color:var(--muted);font-size:12px}
+    .res .rank{color:var(--gold);font-size:20px;font-weight:800;text-align:right;white-space:nowrap}
+    .res .rank.wait{color:var(--muted);font-size:13px;font-weight:700}
+    .res a{grid-column:1/-1;font-size:12px}
     .slot time{color:var(--gold);font-size:16px;font-weight:800}
     .slot div{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
     .slot div small{display:block;color:var(--muted);font-size:11px}
@@ -95,6 +104,11 @@
     <div class="heading"><h1>OWS日本選手権 エントリー確認</h1><div class="date"><b>競技日</b> 10月17日(土)・18日(日)</div></div>
     <p class="summary">千葉県館山市・北条海岸　|　申込種目・所属で確認</p>
   </header>
+
+  <section class="results-box" aria-labelledby="results-title">
+    <h2 id="results-title">🏁 鹿児島出身の選手の結果</h2>
+    <div id="results"></div>
+  </section>
 
   <section class="featured" aria-labelledby="kagoshima-title">
     <div class="featured-head"><h2 id="kagoshima-title">鹿児島出身の選手</h2><span class="featured-count" id="featured-count"></span></div>
@@ -201,8 +215,27 @@ function renderTimeline(featured){
   }).join('');
 }
 
+const RESULT_PDF = {
+  '10km': 'https://aquatics.or.jp/fwp/wp-content/uploads/2026/03/Result_%E6%97%A5%E6%9C%AC%E9%81%B8%E6%89%8B%E6%A8%A9_10km_261017.pdf',
+};
+
+function renderResults(featured){
+  const items = [];
+  Object.keys(SCHEDULE).sort((a, b) => SCHEDULE[a].date.localeCompare(SCHEDULE[b].date)).forEach(event => {
+    featured.filter(row => row.events.includes(event)).forEach(row => {
+      const r = row.results && row.results[event];
+      const rank = r ? `<span class="rank">${safe(r.rank.replace(/（.*）/, ''))}</span>` : '<span class="rank wait">結果待ち</span>';
+      const detail = r ? `${safe(r.time || '')}　${safe((r.rank.match(/（(.*)）/) || [])[1] || '')}` : `${safe(SCHEDULE[event].label)} ${safe(startTime(row, event))} スタート`;
+      const link = r && RESULT_PDF[event] ? `<a href="${RESULT_PDF[event]}" target="_blank" rel="noreferrer">公式結果PDFを見る（${safe(event)}）</a>` : '';
+      items.push(`<div class="res"><b>${safe(row.name)}　<small style="display:inline;color:var(--muted)">${safe(row.gender)}${safe(event)}</small></b>${rank}<small>${detail}</small>${link}</div>`);
+    });
+  });
+  document.getElementById('results').innerHTML = items.join('');
+}
+
 function renderFeatured(){
   const featured = rows.filter(row => row.kagoshima);
+  renderResults(featured);
   renderTimeline(featured);
   document.getElementById('featured-count').textContent = `${featured.length}名を強調表示`;
   document.getElementById('featured').innerHTML = featured.map(row =>
