@@ -1,20 +1,36 @@
 name: ページを作り直す
 
 # Claude などのアプリからの push では GitHub Pages が作り直されないため、
-# push のたびに作り直しを頼む。
+# push のたびに作り直しを頼み、公開ページが新しくなったことを確かめる。
 on:
   push:
     branches: [gh-pages]
   workflow_dispatch:
 
 permissions:
+  contents: read
   pages: write
 
 jobs:
   rebuild:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Pages の作り直しを頼む
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X POST "repos/${{ github.repository }}/pages/builds"
+
+      - name: 公開ページが新しくなったか確かめる（最大5分）
+        run: |
+          URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          for _ in $(seq 1 30); do
+            if curl -sfL --max-time 10 "$URL?v=$RANDOM" -o served.html && cmp -s served.html index.html; then
+              echo "✅ 公開ページは最新です: $URL" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::5分たっても公開ページが新しくなりませんでした: $URL"
+          exit 1
