@@ -48,6 +48,7 @@
     .res b{font-size:16px}
     .res small{grid-column:1/-1;color:var(--muted);font-size:12px}
     .res .rank{color:var(--gold);font-size:20px;font-weight:800;text-align:right;white-space:nowrap}
+    .res .rank small{display:block;color:#fff;font-size:15px;text-align:right}
     .res .rank.wait{color:var(--muted);font-size:13px;font-weight:700}
     .res a{grid-column:1/-1;font-size:12px}
     .slot time{color:var(--gold);font-size:16px;font-weight:800}
@@ -224,8 +225,8 @@ function renderResults(featured){
   Object.keys(SCHEDULE).sort((a, b) => SCHEDULE[a].date.localeCompare(SCHEDULE[b].date)).forEach(event => {
     featured.filter(row => row.events.includes(event)).forEach(row => {
       const r = row.results && row.results[event];
-      const rank = r ? `<span class="rank">${safe(r.rank.replace(/（.*）/, ''))}</span>` : '<span class="rank wait">結果待ち</span>';
-      const detail = r ? `${safe(r.time || '')}　${safe((r.rank.match(/（(.*)）/) || [])[1] || '')}` : `${safe(SCHEDULE[event].label)} ${safe(startTime(row, event))} スタート`;
+      const rank = r ? `<span class="rank">${safe(r.rank.replace(/（.*）/, ''))}<small>タイム ${safe(r.time || '')}</small></span>` : '<span class="rank wait">結果待ち</span>';
+      const detail = r ? `${safe((r.rank.match(/（(.*)）/) || [])[1] || '')}` : `${safe(SCHEDULE[event].label)} ${safe(startTime(row, event))} スタート`;
       const link = r && RESULT_PDF[event] ? `<a href="${RESULT_PDF[event]}" target="_blank" rel="noreferrer">公式結果PDFを見る（${safe(event)}）</a>` : '';
       items.push(`<div class="res"><b>${safe(row.name)}　<small style="display:inline;color:var(--muted)">${safe(row.gender)}${safe(event)}</small></b>${rank}<small>${detail}</small>${link}</div>`);
     });
